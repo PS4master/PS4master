@@ -371,110 +371,73 @@
                 // منتظر می‌مانیم تا فایل صوتی بارگذاری شود
                 soundPlayer.onload = () => {
                     isSoundReady = true;
-                };
-            }
-        }, { once: true });
-        
-        // اجرای اولیه
-        window.onload = function() {
-            renderIcons();
-            selectIcon(1); // انتخاب اولین آیکون به صورت پیش‌فرض
-            setInterval(updateTime, 60000); // به‌روزرسانی زمان هر دقیقه
-        };
-      // کنترلر ترکیبی - هم کیبورد هم DualShock
-class UniversalController {
+                }:
+              // کنترلر با تنظیمات دقیق
+class FixedController {
     constructor() {
-        this.gamepad = null;
-        this.isConnected = false;
+        this.keyCooldown = false;
+        this.gamepadCooldown = false;
         this.init();
     }
 
     init() {
-        // DualShock initialization
-        window.addEventListener("gamepadconnected", (e) => {
-            this.gamepad = e.gamepad;
-            this.isConnected = true;
-            this.showMessage("🎮 DualShock 4 وصل شد!");
-        });
-
-        window.addEventListener("gamepaddisconnected", (e) => {
-            this.isConnected = false;
-            this.showMessage("🎮 DualShock 4 قطع شد");
-        });
-
-        // Keyboard event listeners (همون کد قبلی تو)
+        // کیبورد - با تاخیر
         document.addEventListener('keydown', (e) => {
+            if (this.keyCooldown) return;
+            
             if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                this.navigateLeft();
+                this.keyCooldown = true;
+                activeIndex = (activeIndex - 1 + icons.length) % icons.length;
+                selectIcon(activeIndex);
+                setTimeout(() => { this.keyCooldown = false; }, 300);
             } else if (e.key === "ArrowRight") {
-                e.preventDefault();
-                this.navigateRight();
+                this.keyCooldown = true;
+                activeIndex = (activeIndex + 1) % icons.length;
+                selectIcon(activeIndex);
+                setTimeout(() => { this.keyCooldown = false; }, 300);
             } else if (e.key === "Enter") {
-                this.selectActiveIcon();
+                navigateToActiveIcon();
             }
+        });
+
+        // گیم‌پد
+        window.addEventListener("gamepadconnected", (e) => {
+            console.log("🎮 Gamepad connected!");
+            this.startGamepadLoop();
         });
     }
 
-    update() {
-        // DualShock control
-        if (this.isConnected) {
-            const gamepad = navigator.getGamepads()[this.gamepad.index];
-            if (gamepad) {
-                if (gamepad.buttons[14].pressed) { // D-Pad چپ
-                    this.navigateLeft();
-                } else if (gamepad.buttons[15].pressed) { // D-Pad راست
-                    this.navigateRight();
-                } else if (gamepad.buttons[0].pressed) { // دکمه X
-                    this.selectActiveIcon();
+    startGamepadLoop() {
+        const checkGamepad = () => {
+            const gamepads = navigator.getGamepads();
+            const gamepad = gamepads[0];
+            
+            if (gamepad && !this.gamepadCooldown) {
+                if (gamepad.buttons[14].pressed) { // D-pad left
+                    this.gamepadCooldown = true;
+                    activeIndex = (activeIndex - 1 + icons.length) % icons.length;
+                    selectIcon(activeIndex);
+                    setTimeout(() => { this.gamepadCooldown = false; }, 300);
+                } else if (gamepad.buttons[15].pressed) { // D-pad right
+                    this.gamepadCooldown = true;
+                    activeIndex = (activeIndex + 1) % icons.length;
+                    selectIcon(activeIndex);
+                    setTimeout(() => { this.gamepadCooldown = false; }, 300);
+                } else if (gamepad.buttons[0].pressed) { // X button
+                    navigateToActiveIcon();
                 }
             }
-        }
-    }
-
-    navigateLeft() {
-        activeIndex = (activeIndex - 1 + icons.length) % icons.length;
-        selectIcon(activeIndex);
-        this.vibrate(50);
-    }
-
-    navigateRight() {
-        activeIndex = (activeIndex + 1) % icons.length;
-        selectIcon(activeIndex);
-        this.vibrate(50);
-    }
-
-    selectActiveIcon() {
-        navigateToActiveIcon();
-        this.vibrate(100);
-    }
-
-    vibrate(duration = 100) {
-        if (this.isConnected && this.gamepad.vibrationActuator) {
-            this.gamepad.vibrationActuator.playEffect("dual-rumble", {
-                startDelay: 0,
-                duration: duration,
-                weakMagnitude: 0.5,
-                strongMagnitude: 0.3
-            });
-        }
-    }
-
-    showMessage(text) {
-        // کد نمایش پیام...
+            
+            requestAnimationFrame(checkGamepad);
+        };
+        checkGamepad();
     }
 }
 
-// راه‌اندازی کنترلر جهانی
-const universalController = new UniversalController();
-
-// آپدیت در هر فریم
-function updateGamepad() {
-    universalController.update();
-    requestAnimationFrame(updateGamepad);
-}
-requestAnimationFrame(updateGamepad);
+// راه‌اندازی
+new FixedController();
     </script>
 </body>
 </html>
+
 
