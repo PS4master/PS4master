@@ -15,10 +15,9 @@
             color: #d1d5db;
             overflow: hidden;
             user-select: none;
-            /* اضافه شده برای انیمیشن کل صفحه */
+            /* **مهم:** حذف انیمیشن کلی برای فعال شدن انیمیشن آیتم به آیتم */
             transform-origin: center center;
-            /* این انتقال 0.5 ثانیه برای انیمیشن نیست، اما بهتر است باشد */
-            transition: transform 0.5s, opacity 0.5s; 
+            perspective: 1000px; 
         }
         
         .ps4-container {
@@ -88,31 +87,55 @@
             text-shadow: 0 0 10px currentColor;
         }
 
-        /* --- Keyframes انیمیشن Zoom Out کل صفحه --- */
-        @keyframes screen-transition-out {
-            0% { transform: scale(1); opacity: 1; } /* وضعیت عادی */
-            100% { transform: scale(0.5); opacity: 0; } /* کوچک شدن شدید و محو شدن */
+        /* --- Keyframes انیمیشن Slide Out Right (جدید: خروج تک به تک) --- */
+        @keyframes icon-slide-out-right {
+            0% { 
+                /* شروع از حالت فعال */
+                transform: scale(1.3) translateX(0); 
+                opacity: 1; 
+            }
+            100% { 
+                /* حرکت به راست و محو شدن */
+                transform: scale(1.3) translateX(300px); 
+                opacity: 0; 
+            } 
         }
         
-        body.transition-out {
-            /* زمان انیمیشن 0.8s */
-            animation: screen-transition-out 0.8s ease-out forwards; 
-        }
-
-        /* حذف پس زمینه متحرک (body::before) وقتی در حالت transition-out است */
-        body.transition-out::before {
-            content: none;
-        }
-        
-        /* پنهان کردن سریع محتوای روی صفحه (مانند آیکون‌ها و جزئیات) */
-        body.transition-out .top-bar,
-        body.transition-out .bottom-bar,
-        body.transition-out .ps4-container {
-            opacity: 0;
-            transition: opacity 0.1s; /* محو شدن سریع محتوا */
+        /* کلاس برای اعمال به آیتم‌ها در زمان خروج */
+        .icon-item.icon-exit {
+            /* زمان انیمیشن برای هر آیتم */
+            animation: icon-slide-out-right 0.4s ease-in forwards; 
         }
         /* ------------------------------------------- */
         
+        /* کلاس برای محو کردن سریع محتوای دیگر در زمان خروج */
+        body.transition-out .top-bar,
+        body.transition-out .bottom-bar,
+        body.transition-out .details-panel {
+            opacity: 0;
+            transition: opacity 0.1s; 
+        }
+        /* ------------------------------------------- */
+
+        /* --- استایل جدید: پوشش دهنده در زمان خروج (Exit Overlay) --- */
+        .exit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0d121c; /* رنگ پس زمینه اصلی */
+            z-index: 99; /* بالاتر از همه عناصر UI */
+            opacity: 0;
+            transition: opacity 0.05s ease-out;
+            pointer-events: none;
+        }
+        
+        .exit-overlay.show {
+            opacity: 1;
+        }
+        /* ------------------------------------------- */
+
         /* --- استایل‌های نوار پیشرفت Goldhen --- */
         .progress-overlay {
             position: fixed;
@@ -270,6 +293,8 @@
 </head>
 <body class="bg-gray-900 text-gray-300">
 
+    <div id="exit-overlay" class="exit-overlay"></div>
+    
     <header class="top-bar">
         <div class="user-info">
             <img src="no.png" class="profile-picture" alt="تصویر پروفایل">
@@ -339,6 +364,8 @@
         let activeIndex = icons.findIndex(icon => icon.name === "the wolf hack");
         const iconRow = document.getElementById('icon-row');
         const detailsPanel = document.getElementById('details-panel');
+        // **متغیر جدید برای دسترسی به لایه پوشاننده**
+        const exitOverlay = document.getElementById('exit-overlay'); 
         let soundPlayer;
         let isSoundReady = false;
         let isAnimating = false;
@@ -356,6 +383,7 @@
             iconRow.innerHTML = '';
             icons.forEach((icon, index) => {
                 const iconItem = document.createElement('div');
+                // مطمئن شوید کلاس 'icon-exit' در اینجا وجود ندارد.
                 iconItem.className = `icon-item ${index === activeIndex ? 'active' : ''}`;
                 iconItem.innerHTML = `
                     <img src="${icon.image}" alt="${icon.name}">
@@ -377,6 +405,7 @@
             
             setTimeout(() => {
                 animateIcons();
+                // فعال کردن آیکون پس از اتمام انیمیشن لودینگ آیکون‌ها
                 setTimeout(() => {
                     selectIcon(activeIndex);
                 }, icons.length * 150 + 100);
@@ -404,6 +433,7 @@
             activeIndex = index;
             const newActiveItem = iconRow.querySelectorAll('.icon-item')[activeIndex];
             
+            // اجرای مستقیم تغییرات بدون setTimeout برای واکنش سریعتر
             newActiveItem.classList.add('active');
             const neonColor = icons[activeIndex].neonColor;
             newActiveItem.querySelector('img').style.boxShadow = `0 0 40px ${neonColor}`;
@@ -477,32 +507,42 @@
 
             const body = document.body;
             const activeIconName = icons[activeIndex].name;
+            const iconItems = iconRow.querySelectorAll('.icon-item');
 
             // اگر آیتم Goldhen باشد، منطق نوار پیشرفت اجرا شود.
             if (activeIconName === "Goldhen") {
                 startGoldhenProcess(activeUrl); 
                 return;
             }
+            
+            // پارامترهای انیمیشن خروج ترتیبی
+            const itemAnimationDuration = 400; // 0.4 ثانیه برای حرکت هر آیتم
+            const itemDelay = 100; // 0.1 ثانیه تأخیر بین شروع انیمیشن‌ها
+            // زمان کل: (تعداد آیتم‌ها * تأخیر) + زمان انیمیشن نهایی آیتم
+            const totalAnimationTime = (iconItems.length * itemDelay) + itemAnimationDuration;
 
-            // ۱. اضافه کردن کلاس انیمیشن به کل بدنه صفحه
+            // ۱. شروع انیمیشن خروج تک به تک آیکون‌ها
+            iconItems.forEach((item, index) => {
+                setTimeout(() => {
+                    // اعمال کلاس انیمیشن خروج به هر آیکون
+                    item.classList.add('icon-exit'); 
+                }, index * itemDelay);
+            });
+
+            // ۲. محو کردن سریع جزئیات (نوارها و پنل) با یک کلاس
             body.classList.add('transition-out');
             
-            // ۲. منتظر ماندن برای اتمام انیمیشن Zoom Out (0.8s) و سپس هدایت فوری
-            body.addEventListener('animationend', function handler(e) {
-                // اطمینان از اینکه انیمیشن مورد نظر تمام شده است
-                if (e.animationName !== 'screen-transition-out') return;
+            // ۳. ناوبری نهایی پس از اتمام انیمیشن آخرین آیتم
+            setTimeout(() => {
+                // فعال سازی لایه پوشاننده (برای پر کردن کامل صفحه قبل از ناوبری)
+                exitOverlay.classList.add('show');
 
-                body.removeEventListener('animationend', handler);
-                
                 // هدایت **فوری** به صفحه جدید پس از اتمام انیمیشن
                 window.location.href = activeUrl;
                 
-                // تنظیم مجدد وضعیت (هرچند با هدایت صفحه این‌ها ریست می‌شوند، اما برای اطمینان نگه می‌داریم)
-                body.classList.remove('transition-out');
                 isAnimating = false;
-            });
-            
-            // *** حذف شد: Fallback Timer حذف شد تا انیمیشن ناگهانی قطع نشود. ***
+                // کلاس انیمیشن کل صفحه (transition-out) دیگر نیازی به حذف ندارد چون صفحه رفرش می‌شود
+            }, totalAnimationTime + 50); // ۵۰ میلی‌ثانیه برای اطمینان بیشتر از پایان انیمیشن
         }
 
         document.addEventListener('keydown', (e) => {
@@ -549,21 +589,24 @@
             updateTime();
         };
 
-        // --- کد مهم برای حل مشکل "بک زدن" ---
+        // --- کد مهم برای حل مشکل "بک زدن" (احساس حضور کاربر) ---
         window.addEventListener('pageshow', function(event) {
             // اگر صفحه از کش مرورگر (Back/Forward) بارگذاری شده است
             if (event.persisted) {
-                // 1. ریست کردن وضعیت انیمیشن و حذف کلاس زوم اوت
+                // 1. ریست کردن وضعیت و کلاس‌های انیمیشن
                 isAnimating = false;
                 document.body.classList.remove('transition-out');
                 
-                // 2. مطمئن شدن از اینکه المان‌های اصلی UI قابل مشاهده هستند
+                // 2. مطمئن شدن از اینکه لایه پوشاننده غیرفعال است
+                document.getElementById('exit-overlay').classList.remove('show');
+                
+                // 3. مطمئن شدن از اینکه المان‌های اصلی UI قابل مشاهده هستند
                 document.querySelector('.top-bar').style.opacity = '1';
                 document.querySelector('.bottom-bar').style.opacity = '1';
                 document.getElementById('icon-row').style.opacity = '1';
                 document.getElementById('details-panel').style.opacity = '1';
 
-                // 3. رندر مجدد آیکون‌ها
+                // 4. رندر مجدد آیکون‌ها (این باعث می‌شود آیکون‌ها با انیمیشن ورود بارگذاری شوند)
                 renderIcons(); 
             }
         });
@@ -571,3 +614,4 @@
     </script>
 </body>
 </html>
+
