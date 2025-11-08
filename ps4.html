@@ -1,31 +1,24 @@
-<!-- 
-  این کد یک رابط کاربری شبیه به PlayStation 4 را ایجاد می‌کند.
-  شامل یک نوار بالایی، یک ردیف آیکون‌های بازی، یک پنل جزئیات و یک نوار پایینی است.
-  از Tailwind CSS برای استایل‌دهی و از JavaScript برای تعامل‌پذیری استفاده می‌کند.
-  در این نسخه، رنگ نئون آیکون‌ها به صورت پویا و بر اساس هر آیکون تغییر می‌کند.
-  پیام "Made by Arshia" با افکت نئون طلایی در پایین صفحه اضافه شده است.
-  فاصله بین آیکون‌ها از 2rem به 4rem افزایش یافته است.
-  قابلیت پخش صدای دلخواه هنگام جابجایی بین آیتم‌ها با استفاده از Tone.js اضافه شده است.
--->
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlayStation 4 UI</title>
-    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tone.js CDN for sound effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght&display=swap');
 
         body {
             font-family: 'Vazirmatn', sans-serif;
-            background-color: #0d121c; /* رنگ زمینه شبیه به PS4 */
-            color: #d1d5db; /* رنگ متن */
-            overflow: hidden; /* جلوگیری از اسکرول غیرضروری */
-            user-select: none; /* جلوگیری از انتخاب متن */
+            background-color: #0d121c;
+            color: #d1d5db;
+            overflow: hidden;
+            user-select: none;
+            /* اضافه شده برای انیمیشن کل صفحه */
+            transform-origin: center center;
+            /* این انتقال 0.5 ثانیه برای انیمیشن نیست، اما بهتر است باشد */
+            transition: transform 0.5s, opacity 0.5s; 
         }
         
         .ps4-container {
@@ -40,7 +33,7 @@
         .icon-row {
             display: flex;
             align-items: center;
-            gap: 4rem; /* فاصله آیتم‌ها افزایش یافته است */
+            gap: 4rem;
             transform: scale(0.75);
             transition: transform 0.5s ease-in-out;
             will-change: transform;
@@ -51,16 +44,23 @@
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            transition: transform 0.3s ease-in-out, filter 0.3s ease-in-out;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: transform, filter;
             filter: grayscale(100%) opacity(0.6);
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+        }
+        
+        .icon-item.loaded {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
         
         .icon-item img {
             width: 150px;
             height: 150px;
             border-radius: 1rem;
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .icon-item .icon-title {
@@ -69,7 +69,7 @@
             font-weight: bold;
             text-align: center;
             color: #6b7280;
-            transition: color 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
         }
 
         .icon-item.active {
@@ -81,12 +81,87 @@
 
         .icon-item.active img {
             transform: scale(1.1);
-            /* حالا رنگ نئون توسط JavaScript تنظیم می‌شود */
         }
 
         .icon-item.active .icon-title {
             color: white;
+            text-shadow: 0 0 10px currentColor;
         }
+
+        /* --- Keyframes انیمیشن Zoom Out کل صفحه --- */
+        @keyframes screen-transition-out {
+            0% { transform: scale(1); opacity: 1; } /* وضعیت عادی */
+            100% { transform: scale(0.5); opacity: 0; } /* کوچک شدن شدید و محو شدن */
+        }
+        
+        body.transition-out {
+            /* زمان انیمیشن 0.8s */
+            animation: screen-transition-out 0.8s ease-out forwards; 
+        }
+
+        /* حذف پس زمینه متحرک (body::before) وقتی در حالت transition-out است */
+        body.transition-out::before {
+            content: none;
+        }
+        
+        /* پنهان کردن سریع محتوای روی صفحه (مانند آیکون‌ها و جزئیات) */
+        body.transition-out .top-bar,
+        body.transition-out .bottom-bar,
+        body.transition-out .ps4-container {
+            opacity: 0;
+            transition: opacity 0.1s; /* محو شدن سریع محتوا */
+        }
+        /* ------------------------------------------- */
+        
+        /* --- استایل‌های نوار پیشرفت Goldhen --- */
+        .progress-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+            opacity: 0; 
+            pointer-events: none; 
+        }
+        
+        .progress-overlay.show {
+            opacity: 1;
+            pointer-events: auto; 
+        }
+
+        .progress-box {
+            background-color: #1f2a40;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 50px rgba(0, 123, 255, 0.5);
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            border: 1px solid rgba(48, 59, 81, 0.3);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 15px;
+            background-color: #0d121c;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #007bff;
+            border-radius: 8px;
+        }
+        /* ------------------------------------------- */
 
         .details-panel {
             min-height: 200px;
@@ -94,7 +169,7 @@
             max-width: 900px;
             margin-top: 2rem;
             padding: 2rem;
-            background-color: rgba(14, 20, 31, 0.5); /* پس‌زمینه نیمه‌شفاف */
+            background-color: rgba(14, 20, 31, 0.5);
             backdrop-filter: blur(10px);
             border-radius: 1.5rem;
             border: 1px solid rgba(48, 59, 81, 0.3);
@@ -146,13 +221,11 @@
             border: 2px solid #3b82f6;
         }
 
-        /* Keyboard navigation indicator */
         .icon-item.nav-active {
             box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.5);
             outline: 2px solid white;
         }
         
-        /* Animation for the background waves, PS4-like */
         body::before {
             content: '';
             position: fixed;
@@ -172,10 +245,9 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Styling for the new footer content */
         .arshia-text {
-            color: #FFD700; /* رنگ طلایی */
-            text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700; /* افکت نئون طلایی */
+            color: #FFD700;
+            text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #FFD700;
         }
 
         .shape-icon {
@@ -198,7 +270,6 @@
 </head>
 <body class="bg-gray-900 text-gray-300">
 
-    <!-- نوار بالایی -->
     <header class="top-bar">
         <div class="user-info">
             <img src="no.png" class="profile-picture" alt="تصویر پروفایل">
@@ -221,20 +292,23 @@
         </div>
     </header>
 
-    <!-- محتوای اصلی -->
     <main class="ps4-container">
-        <!-- ردیف آیکون‌های بازی -->
         <section id="icon-row" class="icon-row">
-            <!-- آیتم‌های آیکون به صورت پویا توسط JavaScript ایجاد می‌شوند -->
         </section>
 
-        <!-- پنل جزئیات -->
         <div id="details-panel" class="details-panel">
-            <!-- محتوای جزئیات به صورت پویا توسط JavaScript تغییر می‌کند -->
         </div>
     </main>
+
+    <div id="goldhen-progress-overlay" class="progress-overlay">
+        <div class="progress-box">
+            <h3 id="progress-status" class="text-xl font-bold mb-4 text-white">Connecting to the server...</h3>
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
     
-    <!-- نوار پایینی -->
     <footer class="bottom-bar">
         <div class="flex items-center justify-center w-full">
             <div class="shape-icon circle-shape"></div>
@@ -244,7 +318,6 @@
     </footer>
 
     <script>
-        // آرایه‌ای از اشیاء برای نگهداری اطلاعات آیکون‌ها
         const icons = [
             { name: "Home", image: "ps4.png", neonColor: "rgba(85, 172, 238, 0.7)", url: "index.html" },
             { name: "the wolf hack", image: "host.png", neonColor: "rgba(231, 76, 60, 0.7)", url: "https://wolf-5.github.io/900c/index.html" },
@@ -254,7 +327,6 @@
             { name: "another host", image: "gogo.png", neonColor: "rgba(112, 128, 144, 0.7)", url: "bb.html" },
         ];
 
-        // اطلاعات جزئیات برای هر آیکون
         const details = {
             "Home": { title: "Home", description: "" },
             "the wolf hack": { title: "the wolf hack", description: "to jailbreak your ps4 exploit 9.00" },
@@ -264,31 +336,47 @@
             "another host": { title: "another host", description: "see another hosts" },
         };
 
-        let activeIndex = 0;
+        let activeIndex = icons.findIndex(icon => icon.name === "the wolf hack");
         const iconRow = document.getElementById('icon-row');
         const detailsPanel = document.getElementById('details-panel');
         let soundPlayer;
         let isSoundReady = false;
+        let isAnimating = false;
 
-        // تابع برای رندر کردن آیکون‌ها
+        function animateIcons() {
+            const iconItems = iconRow.querySelectorAll('.icon-item');
+            iconItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.classList.add('loaded');
+                }, index * 150);
+            });
+        }
+
         function renderIcons() {
-            iconRow.innerHTML = ''; // پاک کردن محتوای قبلی
+            iconRow.innerHTML = '';
             icons.forEach((icon, index) => {
                 const iconItem = document.createElement('div');
-                iconItem.className = `icon-item transition-all duration-300 ${index === activeIndex ? 'active' : ''}`;
+                iconItem.className = `icon-item ${index === activeIndex ? 'active' : ''}`;
                 iconItem.innerHTML = `
                     <img src="${icon.image}" alt="${icon.name}">
                     <span class="icon-title">${icon.name}</span>
                 `;
                 iconItem.addEventListener('click', () => {
+                    if (isAnimating) return;
                     selectIcon(index);
-                    navigateToActiveIcon(); // انتقال به صفحه با کلیک
+                    navigateToActiveIcon(); 
                 });
                 iconRow.appendChild(iconItem);
             });
+            
+            setTimeout(() => {
+                animateIcons();
+                setTimeout(() => {
+                    selectIcon(activeIndex);
+                }, icons.length * 150 + 100);
+            }, 100);
         }
 
-        // تابع برای به‌روزرسانی پنل جزئیات
         function updateDetailsPanel(index) {
             const selectedIconName = icons[index].name;
             const currentDetails = details[selectedIconName];
@@ -299,42 +387,136 @@
             detailsPanel.classList.add('show');
         }
 
-        // تابع برای انتخاب یک آیکون
         function selectIcon(index) {
+            if (isAnimating) return;
+            isAnimating = true;
+
             const oldActiveItem = iconRow.querySelector('.icon-item.active');
             if (oldActiveItem) {
                 oldActiveItem.classList.remove('active');
-                oldActiveItem.querySelector('img').style.boxShadow = 'none'; // حذف سایه نئون
+                oldActiveItem.querySelector('img').style.boxShadow = 'none';
             }
 
             activeIndex = index;
             const newActiveItem = iconRow.querySelectorAll('.icon-item')[activeIndex];
-            newActiveItem.classList.add('active');
-
-            // اعمال رنگ نئون پویا
-            const neonColor = icons[activeIndex].neonColor;
-            newActiveItem.querySelector('img').style.boxShadow = `0 0 40px ${neonColor}`;
             
-            updateDetailsPanel(activeIndex);
-            
-            // پخش صدای جدید
-            if (isSoundReady) {
-                // اطمینان از اینکه پخش‌های قبلی متوقف شده‌اند
-                soundPlayer.stop();
-                soundPlayer.start();
-            }
+            setTimeout(() => {
+                newActiveItem.classList.add('active');
+                const neonColor = icons[activeIndex].neonColor;
+                newActiveItem.querySelector('img').style.boxShadow = `0 0 40px ${neonColor}`;
+                
+                updateDetailsPanel(activeIndex);
+                
+                if (isSoundReady) {
+                    if (soundPlayer.state === 'started') {
+                        soundPlayer.stop();
+                    }
+                    soundPlayer.start(0);
+                }
+                
+                isAnimating = false;
+            }, 50);
         }
+        
+        // **********************************************
+        // تابع مدیریت نوار پیشرفت Goldhen
+        // **********************************************
+        function startGoldhenProcess(url) {
+            const overlay = document.getElementById('goldhen-progress-overlay');
+            const progressBar = document.getElementById('progress-bar');
+            const progressStatus = document.getElementById('progress-status');
+            
+            // 1. نمایش نوار پیشرفت و پنهان کردن آیتم‌های اصلی صفحه
+            overlay.classList.add('show');
+            document.querySelector('.top-bar').style.opacity = '0';
+            document.querySelector('.bottom-bar').style.opacity = '0';
+            document.getElementById('icon-row').style.opacity = '0';
+            document.getElementById('details-panel').style.opacity = '0';
+            
+            // 2. تنظیم متن اولیه
+            progressStatus.innerText = "Connecting to the server...";
+            progressBar.style.width = '0%';
+            
+            // 3. شروع انیمیشن نوار پیشرفت (3 ثانیه)
+            setTimeout(() => {
+                progressBar.style.transition = 'width 3s ease-in-out';
+                progressBar.style.width = '100%';
+            }, 100);
 
-        // تابع برای انتقال به URL مربوط به آیکون فعال
+            // 4. به‌روزرسانی متن به "Connect successfully" پس از پر شدن
+            setTimeout(() => {
+                progressStatus.innerText = "Connect successfully";
+            }, 3100); // 3 ثانیه انیمیشن + 0.1 ثانیه تأخیر
+
+            // 5. پس از به‌روزرسانی نهایی متن، هدایت به لینک دانلود
+            setTimeout(() => {
+                // مخفی کردن نوار پیشرفت
+                overlay.classList.remove('show');
+                
+                // هدایت برای شروع دانلود
+                window.location.href = url;
+                
+                // تنظیم مجدد وضعیت (برای بازگشت احتمالی)
+                isAnimating = false;
+                document.querySelector('.top-bar').style.opacity = '1';
+                document.querySelector('.bottom-bar').style.opacity = '1';
+                document.getElementById('icon-row').style.opacity = '1';
+                document.getElementById('details-panel').style.opacity = '1';
+
+            }, 3500); // 3.5 ثانیه (کمی بعد از نمایش موفقیت)
+        }
+        // **********************************************
+
         function navigateToActiveIcon() {
             const activeUrl = icons[activeIndex].url;
-            if (activeUrl) {
-                window.location.href = activeUrl;
+            if (!activeUrl) return;
+
+            if (isAnimating) return;
+            isAnimating = true; 
+
+            const body = document.body;
+            const activeIconName = icons[activeIndex].name;
+
+            // اگر آیتم Goldhen باشد، منطق نوار پیشرفت اجرا شود.
+            if (activeIconName === "Goldhen") {
+                startGoldhenProcess(activeUrl); 
+                return;
             }
+
+            // ۱. اضافه کردن کلاس انیمیشن به کل بدنه صفحه
+            body.classList.add('transition-out');
+            
+            // ۲. منتظر ماندن برای اتمام انیمیشن Zoom Out (0.8s) و سپس هدایت فوری
+            body.addEventListener('animationend', function handler(e) {
+                // اطمینان از اینکه انیمیشن مورد نظر تمام شده است
+                if (e.animationName !== 'screen-transition-out') return;
+
+                body.removeEventListener('animationend', handler);
+                
+                // **مرحله کلیدی:** پاک کردن تمام محتوای صفحه و سپس هدایت فوری
+                // این کار تضمین می کند که هیچ محتوایی پس از انیمیشن نمایش داده نمی شود.
+                body.innerHTML = '';
+                
+                // ۴. هدایت **فوری** به صفحه جدید
+                window.location.href = activeUrl;
+
+                // ۵. تنظیم مجدد وضعیت (برای بازگشت احتمالی)
+                body.classList.remove('transition-out');
+                isAnimating = false;
+            });
+            
+            // Fallback: در صورتی که انیمیشن به هر دلیلی اجرا نشد یا animationend کار نکرد، بعد از 1.2 ثانیه هدایت کند.
+            setTimeout(() => {
+                if (body.classList.contains('transition-out') && isAnimating) {
+                    body.innerHTML = '';
+                    window.location.href = activeUrl;
+                }
+            }, 1200); // 1.2 ثانیه (کمی بیشتر از 0.8 ثانیه انیمیشن)
         }
 
-        // اضافه کردن رویدادهای کلید برای پیمایش و انتقال
         document.addEventListener('keydown', (e) => {
+            if (isAnimating) return;
+            
             if (e.key === "ArrowLeft") {
                 e.preventDefault();
                 activeIndex = (activeIndex + 1) % icons.length;
@@ -344,11 +526,10 @@
                 activeIndex = (activeIndex - 1 + icons.length) % icons.length;
                 selectIcon(activeIndex);
             } else if (e.key === "Enter") {
-                navigateToActiveIcon();
+                navigateToActiveIcon(); 
             }
         });
 
-        // تابع برای به‌روزرسانی زمان
         function updateTime() {
             const now = new Date();
             let hours = now.getHours();
@@ -358,32 +539,28 @@
             document.getElementById('current-time').innerText = `${hours}:${minutes}`;
         }
         
-        // یک شنونده رویداد برای فعال کردن صدا بعد از اولین تعامل کاربر
         document.body.addEventListener('click', () => {
             if (!isSoundReady) {
                 Tone.start();
-                // ** اینجا URL فایل صوتی دلخواه خود را قرار دهید **
-                const soundFileUrl = "https://kappa.vgmsite.com/soundtracks/playstation-4-system-software-sounds-effects-ps4-gamerip-2013/qkgdbpixbo/12.%20Src19%20Se%20Log%20Cursor.mp3"; 
+                const soundFileUrl = "https://kappa.vgmsite.com/soundtracks/playstation-4-system-software-sounds-effects-ps4-gamerip-2013/qkgdbpixbo/12.%20Src19%20Se%20Log%20Cursor.mp3";
 
-                // یک پلیر Tone.js برای پخش صدا ایجاد می‌کنیم
                 soundPlayer = new Tone.Player(soundFileUrl).toDestination();
 
-                // منتظر می‌مانیم تا فایل صوتی بارگذاری شود
                 soundPlayer.onload = () => {
                     isSoundReady = true;
                 };
             }
         }, { once: true });
         
-        // اجرای اولیه
         window.onload = function() {
             renderIcons();
-            selectIcon(1); // انتخاب اولین آیکون به صورت پیش‌فرض
-            setInterval(updateTime, 60000); // به‌روزرسانی زمان هر دقیقه
+            setInterval(updateTime, 60000);
+            updateTime();
         };
     </script>
 </body>
 </html>
+
 
 
 
