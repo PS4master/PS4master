@@ -23,8 +23,7 @@
       flex: 1;
       padding: 20px;
       position: relative; /* برای انیمیشن لازم است */
-      /* مهم: افزودن ترنزیشن‌های انیمیشن Fade & Slice */
-      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; 
+      /* حذف ترنزیشن‌های CSS برای استفاده از @keyframes */
     }
 
     /* ---------------------------------- */
@@ -45,8 +44,7 @@
       align-items: center;
       gap: 20px;
       box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
-      /* مهم: افزودن ترنزیشن‌های انیمیشن Fade & Slice */
-      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+      /* حذف ترنزیشن‌های CSS برای استفاده از @keyframes */
     }
     
     /* ---------------------------------- */
@@ -86,9 +84,27 @@
         pointer-events: none; /* جلوگیری از کلیک در حین انیمیشن */
     }
 
+    /* --- استایل جدید: پوشش دهنده در زمان خروج (Exit Overlay) --- */
+    .exit-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000000; /* رنگ پس زمینه اصلی */
+        z-index: 99; /* بالاتر از همه عناصر UI */
+        opacity: 0;
+        transition: opacity 0.05s ease-out;
+        pointer-events: none;
+    }
+    
+    .exit-overlay.show {
+        opacity: 1;
+    }
+    /* ------------------------------------------- */
 
     /* ---------------------------------- */
-    /* استایل‌های موجود برای نئون و جلوه‌ها */
+    /* استایل‌های موجود برای نئون و جلوه‌ها (بدون تغییر) */
     /* ---------------------------------- */
 
     footer.custom-footer .shape {
@@ -207,20 +223,20 @@
   </style>
 </head>
 <body>
+  
+  <div id="exit-overlay" class="exit-overlay"></div>
+
   <main>
-    <!-- content-wrapper برای جدا کردن محتوای اصلی از تگ main -->
     <div class="content-wrapper" style="text-align: center;">
       <h1 class="neon-text">Welcome</h1>
       <img src="https://comicbook.com/wp-content/uploads/sites/4/2023/09/e1268b1d-a7dc-4a7f-a318-8e8af5dbc6f1.png" alt="ps plus" style="margin: 5%;" width="30%">
       <link rel="icon" type="image/icon" href="lua.png">
       <br><br>
       <div class="button-container">
-        <!-- دکمه "Read before use" برای فراخوانی انیمیشن خروج -->
         <button onclick="handleNavigation('lean more.html')">
           Read before use
         </button>
         
-        <!-- دکمه "PS4 jailbreak menu" برای فراخوانی انیمیشن خروج -->
         <button onclick="handleNavigation('ps4.html')">
           PS4 jailbreak menu
         </button>
@@ -236,23 +252,35 @@
   </footer>
 
   <script>
+    const mainContent = document.querySelector('main');
+    const footer = document.querySelector('footer.custom-footer');
+    const exitOverlay = document.getElementById('exit-overlay'); 
+    
     /**
      * اجرای انیمیشن برش و محو شدن (Fade & Slice) بر روی کل محتوای صفحه
      * و سپس انتقال به URL مورد نظر.
      * @param {string} url - آدرس صفحه مقصد
      */
     function handleNavigation(url) {
-        const mainContent = document.querySelector('main');
-        const footer = document.querySelector('footer.custom-footer');
         
-        // اعمال انیمیشن Fade & Slice
+        // 1. اعمال انیمیشن Fade & Slice
         mainContent.classList.add('animate-out-slice'); // به سمت بالا
         footer.classList.add('animate-out-slice');    // به سمت پایین
+        
+        // 2. فعال سازی لایه پوشش دهنده (برای پر کردن کامل صفحه قبل از ناوبری)
+        // این کار پرش محتوا را از بین می برد.
+        exitOverlay.classList.add('show');
 
-        // صبر کردن به مدت زمان انیمیشن (500 میلی‌ثانیه) قبل از انتقال
+        // زمان انیمیشن: 500 میلی‌ثانیه
+        const animationDuration = 500; 
+
+        // 3. صبر کردن به مدت زمان انیمیشن قبل از انتقال
         setTimeout(() => {
+            // هدایت فوری به URL مقصد
             window.location.href = url;
-        }, 500); 
+            
+            // نیازی به حذف کلاس‌ها نیست چون صفحه در حال ترک شدن است
+        }, animationDuration + 50); // 550 میلی‌ثانیه برای اطمینان از پایان انیمیشن
     }
 
     // تابع قدیمی poppew که به دلیل استفاده از alert() اصلاح و غیرفعال شده است.
@@ -271,9 +299,26 @@
 
       console.log("OK, now click the PS4 jailbreaks menu");
     }
+
+    // --- کد مهم برای حل مشکل "بک زدن" (احساس حضور کاربر) ---
+    window.addEventListener('pageshow', function(event) {
+        // اگر صفحه از کش مرورگر (Back/Forward) بارگذاری شده است
+        if (event.persisted) {
+            // 1. حذف کلاس‌های انیمیشن خروج از main و footer
+            mainContent.classList.remove('animate-out-slice');
+            footer.classList.remove('animate-out-slice');
+            
+            // 2. مطمئن شدن از اینکه لایه پوشاننده غیرفعال است
+            exitOverlay.classList.remove('show');
+            
+            // نیازی به رندر مجدد نیست چون آیتم‌های ساده‌ای هستند.
+        }
+    });
+    // ------------------------------------------
   </script>
 </body>
 </html>
+
 
 
 
