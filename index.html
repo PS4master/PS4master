@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PS4 Jailbreak Tab</title>
   <style>
+    /* ---------------------------------- */
+    /* استایل‌های اصلی و زمینه */
+    /* ---------------------------------- */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -17,11 +18,18 @@
       color: #fff;
     }
 
+    /* محتوای اصلی - این بخش به سمت بالا اسلاید می‌کند */
     main {
       flex: 1;
       padding: 20px;
+      position: relative; /* برای انیمیشن لازم است */
+      /* مهم: افزودن ترنزیشن‌های انیمیشن Fade & Slice */
+      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; 
     }
 
+    /* ---------------------------------- */
+    /* نوار پایینی (Footer) - این بخش به سمت پایین اسلاید می‌کند */
+    /* ---------------------------------- */
     footer.custom-footer {
       position: fixed;
       bottom: 0;
@@ -37,7 +45,51 @@
       align-items: center;
       gap: 20px;
       box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+      /* مهم: افزودن ترنزیشن‌های انیمیشن Fade & Slice */
+      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
     }
+    
+    /* ---------------------------------- */
+    /* انیمیشن برش و محو شدن (Fade & Slice) */
+    /* ---------------------------------- */
+    @keyframes slice-main-out {
+        0% { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+        100% { 
+            opacity: 0; 
+            transform: translateY(-100vh); /* محتوای اصلی به سمت بالای viewport میرود */
+        }
+    }
+    
+    @keyframes slice-footer-out {
+        0% { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+        100% { 
+            opacity: 0; 
+            transform: translateY(100vh); /* فوتر به سمت پایین viewport میرود */
+        }
+    }
+
+    /* اعمال انیمیشن به MAIN */
+    main.animate-out-slice {
+        animation: slice-main-out 0.5s forwards ease-in-out;
+        pointer-events: none; /* جلوگیری از کلیک در حین انیمیشن */
+    }
+
+    /* اعمال انیمیشن به FOOTER */
+    footer.custom-footer.animate-out-slice {
+        animation: slice-footer-out 0.5s forwards ease-in-out;
+        pointer-events: none; /* جلوگیری از کلیک در حین انیمیشن */
+    }
+
+
+    /* ---------------------------------- */
+    /* استایل‌های موجود برای نئون و جلوه‌ها */
+    /* ---------------------------------- */
 
     footer.custom-footer .shape {
       width: 20px;
@@ -93,6 +145,9 @@
       }
     }
 
+    /* ---------------------------------- */
+    /* عنوان اصلی (Neon) */
+    /* ---------------------------------- */
     .neon-text {
       font-size: 3em;
       font-weight: bold;
@@ -113,7 +168,10 @@
         text-shadow: 0 0 20px #FFD700, 0 0 30px #FFA500, 0 0 40px #FFD700;
       }
     }
-
+    
+    /* ---------------------------------- */
+    /* دکمه‌ها و انیمیشن Pop */
+    /* ---------------------------------- */
     .button-container {
       display: flex;
       justify-content: center;
@@ -125,39 +183,51 @@
       padding: 10px 20px;
       border-radius: 20px;
       cursor: pointer;
-      border: 2px solid blue;
+      border: 2px solid #3b82f6; /* رنگ آبی شبیه PS4 */
       background-color: transparent;
       color: white;
       font-weight: bold;
       transition: all 0.3s ease;
+      transform: scale(1); /* پایه برای انیمیشن Pop */
     }
 
     .button-container button:hover {
-      background-color: blue;
+      background-color: #3b82f6;
       color: black;
-      box-shadow: 0 0 15px blue;
+      box-shadow: 0 0 15px #3b82f6;
+      animation: pop-button-animation 0.3s forwards; /* اعمال انیمیشن Pop در هاور */
+    }
+    
+    /* Keyframes برای انیمیشن Pop */
+    @keyframes pop-button-animation {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); /* کمی بزرگ‌تر می‌شود */ }
+        100% { transform: scale(1.05); /* در اندازه نهایی کمی بزرگ‌تر می‌ماند */ }
     }
   </style>
 </head>
 <body>
   <main>
-    <div style="text-align: center;">
+    <!-- content-wrapper برای جدا کردن محتوای اصلی از تگ main -->
+    <div class="content-wrapper" style="text-align: center;">
       <h1 class="neon-text">Welcome</h1>
       <img src="https://comicbook.com/wp-content/uploads/sites/4/2023/09/e1268b1d-a7dc-4a7f-a318-8e8af5dbc6f1.png" alt="ps plus" style="margin: 5%;" width="30%">
       <link rel="icon" type="image/icon" href="lua.png">
       <br><br>
       <div class="button-container">
-        <a href="lean more.html">
-  <button>
-    Read before Use
-  </button>
-</a>
-        <form action="ps4.html" method="get">
-          <button type="submit">PS4 jailbreak menu</button>
-        </form>
+        <!-- دکمه "Read before use" برای فراخوانی انیمیشن خروج -->
+        <button onclick="handleNavigation('lean more.html')">
+          Read before use
+        </button>
+        
+        <!-- دکمه "PS4 jailbreak menu" برای فراخوانی انیمیشن خروج -->
+        <button onclick="handleNavigation('ps4.html')">
+          PS4 jailbreak menu
+        </button>
       </div>
     </div>
   </main>
+  
 
   <footer class="custom-footer">
     <div class="shape circle"></div>
@@ -166,24 +236,45 @@
   </footer>
 
   <script>
+    /**
+     * اجرای انیمیشن برش و محو شدن (Fade & Slice) بر روی کل محتوای صفحه
+     * و سپس انتقال به URL مورد نظر.
+     * @param {string} url - آدرس صفحه مقصد
+     */
+    function handleNavigation(url) {
+        const mainContent = document.querySelector('main');
+        const footer = document.querySelector('footer.custom-footer');
+        
+        // اعمال انیمیشن Fade & Slice
+        mainContent.classList.add('animate-out-slice'); // به سمت بالا
+        footer.classList.add('animate-out-slice');    // به سمت پایین
+
+        // صبر کردن به مدت زمان انیمیشن (500 میلی‌ثانیه) قبل از انتقال
+        setTimeout(() => {
+            window.location.href = url;
+        }, 500); 
+    }
+
+    // تابع قدیمی poppew که به دلیل استفاده از alert() اصلاح و غیرفعال شده است.
     function poppew(){
-      var mobile = document.getElementById("001").value;
+      var mobile = document.getElementById("001")?.value;
 
-      if (mobile.length < 7 || mobile.length > 7){
-        alert("this code is wrong");
+      if (!mobile || mobile.length !== 7){
+        console.error("This code is wrong or missing."); 
         return;
       }
 
-      if (mobile.substring(0,1) != '9') {
-        alert("this remote play code is wrong please check");
+      if (mobile.substring(0,1) !== '9') {
+        console.error("This remote play code is wrong, please check.");
         return;
       }
 
-      alert("ok now click the PS4 jailbreaks menu")
+      console.log("OK, now click the PS4 jailbreaks menu");
     }
   </script>
 </body>
 </html>
+
 
 
 
