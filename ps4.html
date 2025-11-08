@@ -377,6 +377,7 @@
             
             setTimeout(() => {
                 animateIcons();
+                // فعال کردن آیکون پس از اتمام انیمیشن لودینگ آیکون‌ها
                 setTimeout(() => {
                     selectIcon(activeIndex);
                 }, icons.length * 150 + 100);
@@ -404,6 +405,7 @@
             activeIndex = index;
             const newActiveItem = iconRow.querySelectorAll('.icon-item')[activeIndex];
             
+            // اجرای مستقیم تغییرات بدون setTimeout برای واکنش سریعتر
             newActiveItem.classList.add('active');
             const neonColor = icons[activeIndex].neonColor;
             newActiveItem.querySelector('img').style.boxShadow = `0 0 40px ${neonColor}`;
@@ -487,22 +489,18 @@
             // ۱. اضافه کردن کلاس انیمیشن به کل بدنه صفحه
             body.classList.add('transition-out');
             
-            // ۲. منتظر ماندن برای اتمام انیمیشن Zoom Out (0.8s) و سپس هدایت فوری
-            body.addEventListener('animationend', function handler(e) {
-                // اطمینان از اینکه انیمیشن مورد نظر تمام شده است
-                if (e.animationName !== 'screen-transition-out') return;
+            // **۲. استفاده از setTimeout تضمینی برای انیمیشن 0.8 ثانیه‌ای**
+            const animationDuration = 800; 
 
-                body.removeEventListener('animationend', handler);
+            setTimeout(() => {
+                // حذف کلاس انیمیشن برای تمیزکاری (صفحه جدید را خراب نمی‌کند)
+                body.classList.remove('transition-out');
                 
                 // هدایت **فوری** به صفحه جدید پس از اتمام انیمیشن
                 window.location.href = activeUrl;
                 
-                // تنظیم مجدد وضعیت (هرچند با هدایت صفحه این‌ها ریست می‌شوند، اما برای اطمینان نگه می‌داریم)
-                body.classList.remove('transition-out');
                 isAnimating = false;
-            });
-            
-            // *** حذف شد: Fallback Timer حذف شد تا انیمیشن ناگهانی قطع نشود. ***
+            }, animationDuration + 50); // 850 میلی‌ثانیه برای اطمینان از پایان انیمیشن
         }
 
         document.addEventListener('keydown', (e) => {
@@ -571,3 +569,4 @@
     </script>
 </body>
 </html>
+
