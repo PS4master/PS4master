@@ -269,12 +269,13 @@
       console.log("OK, now click the PS4 jailbreaks menu");
     }
 
-    // ----------------------------------
-    // FIX: اصلاح باگ صفحه سیاه در هنگام بازگشت
-    // ----------------------------------
+    // ----------------------------------------------------
+    // FIX نهایی برای باگ صفحه سیاه در هنگام بازگشت (استفاده از pageshow)
+    // ----------------------------------------------------
+    
     /**
-     * این تابع کلاس‌های انیمیشن خروج را در هنگام بارگذاری صفحه 
-     * (به ویژه پس از بازگشت با دکمه Back مرورگر) حذف می‌کند تا محتوا نمایش داده شود.
+     * این تابع کلاس‌های انیمیشن خروج را در هنگام بازگشت از طریق 
+     * دکمه Back مرورگر (bfcache) یا بارگذاری مجدد، حذف می‌کند.
      */
     function resetAnimationClassesOnLoad() {
         const mainContent = document.querySelector('main');
@@ -289,11 +290,12 @@
         }
     }
 
-    // فراخوانی تابع بلافاصله پس از بارگذاری کامل DOM
-    document.addEventListener('DOMContentLoaded', resetAnimationClassesOnLoad);
+    // ⭐⭐ جایگزین DOMContentLoaded: استفاده از pageshow برای پشتیبانی از دکمه Back ⭐⭐
+    window.addEventListener('pageshow', resetAnimationClassesOnLoad);
   </script>
 </body>
 </html>
+
 
 
 
