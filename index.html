@@ -208,19 +208,16 @@
 </head>
 <body>
   <main>
-    <!-- content-wrapper برای جدا کردن محتوای اصلی از تگ main -->
     <div class="content-wrapper" style="text-align: center;">
       <h1 class="neon-text">Welcome</h1>
       <img src="https://comicbook.com/wp-content/uploads/sites/4/2023/09/e1268b1d-a7dc-4a7f-a318-8e8af5dbc6f1.png" alt="ps plus" style="margin: 5%;" width="30%">
       <link rel="icon" type="image/icon" href="lua.png">
       <br><br>
       <div class="button-container">
-        <!-- دکمه "Read before use" برای فراخوانی انیمیشن خروج -->
         <button onclick="handleNavigation('lean more.html')">
           Read before use
         </button>
         
-        <!-- دکمه "PS4 jailbreak menu" برای فراخوانی انیمیشن خروج -->
         <button onclick="handleNavigation('ps4.html')">
           PS4 jailbreak menu
         </button>
@@ -271,9 +268,33 @@
 
       console.log("OK, now click the PS4 jailbreaks menu");
     }
+
+    // ----------------------------------
+    // FIX: اصلاح باگ صفحه سیاه در هنگام بازگشت
+    // ----------------------------------
+    /**
+     * این تابع کلاس‌های انیمیشن خروج را در هنگام بارگذاری صفحه 
+     * (به ویژه پس از بازگشت با دکمه Back مرورگر) حذف می‌کند تا محتوا نمایش داده شود.
+     */
+    function resetAnimationClassesOnLoad() {
+        const mainContent = document.querySelector('main');
+        const footer = document.querySelector('footer.custom-footer');
+        
+        // حذف کلاس‌ها برای اطمینان از نمایش مجدد محتوا
+        if (mainContent) {
+             mainContent.classList.remove('animate-out-slice');
+        }
+        if (footer) {
+             footer.classList.remove('animate-out-slice');
+        }
+    }
+
+    // فراخوانی تابع بلافاصله پس از بارگذاری کامل DOM
+    document.addEventListener('DOMContentLoaded', resetAnimationClassesOnLoad);
   </script>
 </body>
 </html>
+
 
 
 
