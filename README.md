@@ -39,14 +39,18 @@ The purpose of this project is:
 Special thanks to all exploit and payload developers in the PS4 scene.  
 All original payloads, hosts, and exploits belong to their respective creators.
 
-UI/UX created by: **Arshia — BlackLED**
+UI/UX created by: **Arshia**
 
 ---
 
-## 🌐 Live Demo
-(Insert your site link)
+## 🌐 My Site
+(https://ktarshia4-art.github.io/ps4_ui-for-jailbreak/)
 
 ---
 
 ## 📄 License
 Open-source for UI/UX and educational purposes.
+
+✨ This project remains in active development and will be continuously updated with enhancements,
+optimizations, and improved user experience. ✨
+
