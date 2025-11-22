@@ -366,10 +366,6 @@
         const detailsPanel = document.getElementById('details-panel');
         const exitOverlay = document.getElementById('exit-overlay'); 
         
-        // soundPlayer و isSoundReady حذف شدند: برای کاهش بار اضافی و ریسک کرش
-        // let soundPlayer;
-        // let isSoundReady = false;
-        
         let isAnimating = false;
 
         function animateIcons() {
@@ -385,7 +381,6 @@
             iconRow.innerHTML = '';
             icons.forEach((icon, index) => {
                 const iconItem = document.createElement('div');
-                // مطمئن شوید کلاس 'icon-exit' در اینجا وجود ندارد.
                 iconItem.className = `icon-item ${index === activeIndex ? 'active' : ''}`;
                 iconItem.innerHTML = `
                     <img src="${icon.image}" alt="${icon.name}">
@@ -394,10 +389,8 @@
                 iconItem.addEventListener('click', () => {
                     if (isAnimating) return;
                     
-                    // 1. آیکون کلیک شده را فعال کن
                     selectIcon(index); 
                     
-                    // 2. انیمیشن انتقال را بلافاصله اجرا کن
                     setTimeout(() => {
                         navigateToActiveIcon(); 
                     }, 50); 
@@ -407,7 +400,6 @@
             
             setTimeout(() => {
                 animateIcons();
-                // فعال کردن آیکون پس از اتمام انیمیشن لودینگ آیکون‌ها
                 setTimeout(() => {
                     selectIcon(activeIndex);
                 }, icons.length * 150 + 100);
@@ -435,22 +427,11 @@
             activeIndex = index;
             const newActiveItem = iconRow.querySelectorAll('.icon-item')[activeIndex];
             
-            // اجرای مستقیم تغییرات بدون setTimeout برای واکنش سریعتر
             newActiveItem.classList.add('active');
             const neonColor = icons[activeIndex].neonColor;
             newActiveItem.querySelector('img').style.boxShadow = `0 0 40px ${neonColor}`;
             
             updateDetailsPanel(activeIndex);
-            
-            // کدهای مربوط به soundPlayer حذف شدند
-            /*
-            if (isSoundReady) {
-                if (soundPlayer.state === 'started') {
-                    soundPlayer.stop();
-                }
-                soundPlayer.start(0);
-            }
-            */
         }
         
         // **********************************************
@@ -475,7 +456,6 @@
             
             // 3. شروع انیمیشن نوار پیشرفت (3 ثانیه)
             setTimeout(() => {
-                // توجه: بهتر است این انیمیشن را به صورت Jump-Step پیاده‌سازی کنید تا در زمان اجرای Exploit بار پردازشی کمتری داشته باشد.
                 progressBar.style.transition = 'width 3s ease-in-out'; 
                 progressBar.style.width = '100%';
             }, 100);
@@ -487,13 +467,9 @@
 
             // 5. پس از به‌روزرسانی نهایی متن، هدایت به لینک دانلود
             setTimeout(() => {
-                // مخفی کردن نوار پیشرفت
                 overlay.classList.remove('show');
-                
-                // هدایت برای شروع دانلود
                 window.location.href = url;
                 
-                // تنظیم مجدد وضعیت (برای بازگشت احتمالی)
                 isAnimating = false;
                 document.querySelector('.top-bar').style.opacity = '1';
                 document.querySelector('.bottom-bar').style.opacity = '1';
@@ -522,15 +498,13 @@
             }
             
             // پارامترهای انیمیشن خروج ترتیبی
-            const itemAnimationDuration = 400; // 0.4 ثانیه برای حرکت هر آیتم
-            const itemDelay = 100; // 0.1 ثانیه تأخیر بین شروع انیمیشن‌ها
-            // زمان کل: (تعداد آیتم‌ها * تأخیر) + زمان انیمیشن نهایی آیتم
+            const itemAnimationDuration = 400; 
+            const itemDelay = 100; 
             const totalAnimationTime = (iconItems.length * itemDelay) + itemAnimationDuration;
 
             // ۱. شروع انیمیشن خروج تک به تک آیکون‌ها
             iconItems.forEach((item, index) => {
                 setTimeout(() => {
-                    // اعمال کلاس انیمیشن خروج به هر آیکون
                     item.classList.add('icon-exit'); 
                 }, index * itemDelay);
             });
@@ -547,8 +521,7 @@
                 window.location.href = activeUrl;
                 
                 isAnimating = false;
-                // کلاس انیمیشن کل صفحه (transition-out) دیگر نیازی به حذف ندارد چون صفحه رفرش می‌شود
-            }, totalAnimationTime + 50); // ۵۰ میلی‌ثانیه برای اطمینان بیشتر از پایان انیمیشن
+            }, totalAnimationTime + 50); 
         }
 
         document.addEventListener('keydown', (e) => {
@@ -562,7 +535,9 @@
                 e.preventDefault();
                 activeIndex = (activeIndex - 1 + icons.length) % icons.length;
                 selectIcon(activeIndex);
-            } else if (e.key === "Enter") {
+            } 
+            // اضافه شدن e.key === " " برای پشتیبانی از کلید Space (معادل X در PS4)
+            else if (e.key === "Enter" || e.key === " ") {
                 navigateToActiveIcon(); 
             }
         });
@@ -575,9 +550,6 @@
             minutes = minutes < 10 ? '0' + minutes : minutes;
             document.getElementById('current-time').innerText = `${hours}:${minutes}`;
         }
-        
-        // کدهای مربوط به Tone.js در این قسمت حذف شدند
-        /* document.body.addEventListener('click', () => { ... } , { once: true }); */
         
         window.onload = function() {
             
@@ -600,22 +572,17 @@
 
         // --- کد مهم برای حل مشکل "بک زدن" (احساس حضور کاربر) ---
         window.addEventListener('pageshow', function(event) {
-            // اگر صفحه از کش مرورگر (Back/Forward) بارگذاری شده است
             if (event.persisted) {
-                // 1. ریست کردن وضعیت و کلاس‌های انیمیشن
                 isAnimating = false;
                 document.body.classList.remove('transition-out');
                 
-                // 2. مطمئن شدن از اینکه لایه پوشاننده غیرفعال است
                 document.getElementById('exit-overlay').classList.remove('show');
                 
-                // 3. مطمئن شدن از اینکه المان‌های اصلی UI قابل مشاهده هستند
                 document.querySelector('.top-bar').style.opacity = '1';
                 document.querySelector('.bottom-bar').style.opacity = '1';
                 document.getElementById('icon-row').style.opacity = '1';
                 document.getElementById('details-panel').style.opacity = '1';
 
-                // 4. رندر مجدد آیکون‌ها (این باعث می‌شود آیکون‌ها با انیمیشن ورود بارگذاری شوند)
                 renderIcons(); 
             }
         });
@@ -623,5 +590,6 @@
     </script>
 </body>
 </html>
+
 
 
